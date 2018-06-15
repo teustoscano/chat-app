@@ -34,3 +34,17 @@ app.post("/users", (req, res) => {
         }
       });
   });
+
+  app.post("/authenticate", (req, res) => {
+    const authData = chatkit.authenticate({ userId: req.query.user_id });
+    res.status(authData.status).send(authData.body);
+  });
+  
+  const port = 3001;
+  app.listen(port, err => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(`Running on port ${port}`);
+    }
+  });
