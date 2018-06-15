@@ -7,3 +7,15 @@ const makeChatkitNodeCompatible = () => {
   global.window = window;
   global.navigator = {};
 };
+
+makeChatkitNodeCompatible();
+
+const main = async () => {
+  try {
+    // TODO: We're going to create a command line chat client in here!
+  } catch (err) {
+    console.log(`Failed with ${err}`);
+    process.exit(1);
+  }
+}
+main();
