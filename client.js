@@ -2,7 +2,9 @@ const {ChatManager, TokenProvider} = require('@pusher/chatkit');
 const {JSDOM} = require('jsdom');
 const util = require('util');
 const prompt = require('prompt');
-const axios = require('axios')
+const axios = require('axios');
+const readline = require('readline');
+const ora = require('ora');
 
 const makeChatkitNodeCompatible = () => {
   const {window} = new JSDOM();
@@ -22,6 +24,7 @@ const createUser = async username => {
 
 
 const main = async () => {
+  const spinner = ora();
   try {
     prompt.start();
     prompt.message = '';
@@ -35,17 +38,20 @@ const main = async () => {
     ];
 
     const {username} = await get(usernameSchema);
+    spinner.start('Authenticating..');
     await createUser(username);
+    spinner.succeed(`Authenticated as ${username}`);
     const chatManager = new ChatManager({
            instanceLocator: 'v1:us1:973e9d53-6950-4a79-844c-52248ae4d756',
            userId: username,
            tokenProvider: new TokenProvider({url: 'http://localhost:3001/authenticate'}),
          });
-        
+         spinner.start('Connecting to Pusher..');
          const currentUser = await chatManager.connect();
-
-
+         spinner.succeed('Connected');
+         spinner.start('Fetching rooms..');
          const joinableRooms = await currentUser.getJoinableRooms();
+         spinner.succeed('Fetched rooms');
          const availableRooms = [...currentUser.rooms, ...joinableRooms];
 
          console.log('Available rooms:');
@@ -68,7 +74,7 @@ const main = async () => {
             
          const { room: chosenRoom } = await get(roomSchema)
          const room = availableRooms[chosenRoom]
-
+         spinner.start(`Joining room ${chosenRoom}..`);
          await currentUser.subscribeToRoom({
             roomId: room.id,
             hooks: {
@@ -79,8 +85,14 @@ const main = async () => {
                 }
             },
             messageLimit: 0
-         })
-                console.log(`Joined ${room.name} successfully`)
+         });
+         spinner.succeed(`Joined ${room.name}`);
+         console.log(`Joined ${room.name} successfully`);
+         const input = readline.createInterface({input: process.stdin});
+
+         input.on('line', async text => {
+             await currentUser.sendMessage({roomId: room.id, text});
+         });
 
 } catch (err) {
     console.log(`Failed with ${err}`);
