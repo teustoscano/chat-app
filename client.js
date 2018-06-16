@@ -43,6 +43,45 @@ const main = async () => {
          });
         
          const currentUser = await chatManager.connect();
+
+
+         const joinableRooms = await currentUser.getJoinableRooms();
+         const availableRooms = [...currentUser.rooms, ...joinableRooms];
+
+         console.log('Available rooms:');
+         availableRooms.forEach((room, index) => {
+           console.log(`${index} - ${room.name}`);
+         });
+
+         const roomSchema = [{
+            description: 'Select a room',
+            name: 'room',
+            conform: v => {
+            if (v >= availableRooms.length) {
+                return false
+            }
+                return true
+            },
+            message: 'Room must only be numbers',
+            required: true
+            }]
+            
+         const { room: chosenRoom } = await get(roomSchema)
+         const room = availableRooms[chosenRoom]
+
+         await currentUser.subscribeToRoom({
+            roomId: room.id,
+            hooks: {
+                onNewMessage: message => {
+                    const { senderId, text } = message
+                    if (senderId === username) return
+                    console.log(`${senderId}: ${text}`)
+                }
+            },
+            messageLimit: 0
+         })
+                console.log(`Joined ${room.name} successfully`)
+
 } catch (err) {
     console.log(`Failed with ${err}`);
     process.exit(1);
