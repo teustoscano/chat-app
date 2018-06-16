@@ -24,7 +24,7 @@ const createUser = async username => {
 const main = async () => {
   try {
     prompt.start();
-    prompt.message  = '';
+    prompt.message = '';
     const get = util.promisify(prompt.get);
     const usernameSchema = [
         {
@@ -36,6 +36,13 @@ const main = async () => {
 
     const {username} = await get(usernameSchema);
     await createUser(username);
+    const chatManager = new ChatManager({
+           instanceLocator: 'v1:us1:973e9d53-6950-4a79-844c-52248ae4d756',
+           userId: username,
+           tokenProvider: new TokenProvider({url: 'http://localhost:3001/authenticate'}),
+         });
+        
+         const currentUser = await chatManager.connect();
 } catch (err) {
     console.log(`Failed with ${err}`);
     process.exit(1);
