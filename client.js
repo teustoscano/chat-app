@@ -1,7 +1,8 @@
 const {ChatManager, TokenProvider} = require('@pusher/chatkit');
 const {JSDOM} = require('jsdom');
 const util = require('util');
-const prompt = require('prompt')
+const prompt = require('prompt');
+const axios = require('axios')
 
 const makeChatkitNodeCompatible = () => {
   const {window} = new JSDOM();
@@ -10,6 +11,15 @@ const makeChatkitNodeCompatible = () => {
 };
 
 makeChatkitNodeCompatible();
+
+const createUser = async username => {
+    try{
+        await axios.post('http://localhost:3001/users', {username});
+    } catch ({message}) {
+        throw new Error('Failed to create a user, ${message}');
+    }
+};
+
 
 const main = async () => {
   try {
@@ -21,11 +31,12 @@ const main = async () => {
             description: 'Enter your username',
             name: 'username',
             required: true,
-        };
+        },
     ];
 
     const {username} = await get(usernameSchema);
-  } catch (err) {
+    await createUser(username);
+} catch (err) {
     console.log(`Failed with ${err}`);
     process.exit(1);
   }
